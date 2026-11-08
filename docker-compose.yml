@@ -1,0 +1,52 @@
+services:
+  postgres-db:
+    image: postgres:18-alpine
+    container_name: pandai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pandai_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pandai_password}
+      POSTGRES_DB: ${POSTGRES_DB:-pandai_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pandai_user} -d ${POSTGRES_DB:-pandai_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: pandai-ml-fastapi
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_PATH: "./models/pandai_model.pkl"
+      MAX_LATENCY_MS: "100"
+
+  backend:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: pandai-backend-nestjs
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-pandai_user}:${POSTGRES_PASSWORD:-pandai_password}@postgres-db:5432/${POSTGRES_DB:-pandai_db}?schema=public"
+      ML_SERVICE_URL: "http://ml-service:8000"
+      PORT: "3000"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      ml-service:
+        condition: service_started
+
+volumes:
+  pgdata:
