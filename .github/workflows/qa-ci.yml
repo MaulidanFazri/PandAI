@@ -32,15 +32,17 @@ jobs:
   qa-backend-test:
     name: Test Backend NestJS
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: 1. Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 2. Set up Node.js 22
+      - name: 2. Set up Node.js 26 LTS
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "26"
           cache: "npm"
           cache-dependency-path: "apps/api/package-lock.json"
 
