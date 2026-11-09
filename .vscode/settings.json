@@ -1,0 +1,5 @@
+{
+  "git.inputValidationLength": 72,
+  "git.inputValidationSubjectLength": 50,
+  "git.useCommitInputAsStashMessage": true
+}
