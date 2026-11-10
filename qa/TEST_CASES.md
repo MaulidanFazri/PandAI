@@ -1,16 +1,27 @@
-# PandAI Master Test Cases (4 Levels of Testing)
+# PandAI Master Test Plan & Test Cases (Aligned with Official US-1 to US-12)
 
-| Test ID | Level Uji | US ID | Komponen | Skenario Pengujian | Data Input | Hasil yang Diharapkan | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| TC-01 | Unit & Integration | US-04 | FastAPI | Prediksi durasi belajar input normal | difficulty: 4, confidence: 2, deadline: 3 hari | HTTP 200 OK, mengembalikan durasi > 0 jam dan skor prioritas 0-100. | Pending |
-| TC-02 | Integration (Perf) | US-04 | FastAPI | Uji batas latensi inferensi ML < 100 ms | 10x request beruntun ke POST /predict-duration | Rata-rata waktu respons tercatat < 100 ms. | Pending |
-| TC-03 | Unit (Boundary) | US-04 | FastAPI | Uji batas input invalid (Category-Partition) | confidence: 0, confidence: 6, deadline: -2 | Ditolak dengan HTTP 400/422 tanpa membuat server crash. | Pending |
-| TC-04 | Integration | US-05 | NestJS & ML | Update rating pemahaman pasca-belajar | Kirim post_study_confidence_rating: 4 | Skor mastery mata kuliah di database berhasil diperbarui. | Pending |
-| TC-05 | Integration | US-06 | FastAPI | Kalibrasi estimasi dari riwayat aktual user | Rasio historis user: 1.25 + input tugas baru | Durasi prediksi otomatis dikalibrasi 1.25x dari durasi dasar. | Pending |
-| TC-06 | System | US-07 | NestJS & Expo | Penempatan otomatis tugas ke slot kosong | 3 tugas aktif + slot kosong jam 13.00-17.00 | Tugas masuk ke slot kosong sesuai prioritas tanpa tabrak jam tidur. | Pending |
-| TC-07 | System | US-08 | Expo & NestJS | Trigger reschedule cepat saat kelas batal | Tekan tombol "Ya, batal" pada kelas jam 13.00 | Kartu saran pengganti muncul untuk slot tersebut dalam <= 5 detik. | Pending |
-| TC-08 | System | US-09 | Expo & NestJS | Konfirmasi 1-tap dan pindah jadwal drag-n-drop | Tekan Terima atau geser blok jadwal di kalender | Jadwal tersimpan di database dan tampil sesuai posisi baru. | Pending |
-| TC-09 | System | US-10 | NestJS | Pengisian jeda tanggung (< 30 menit) | Jeda kosong 20 menit di antara dua kelas | Sistem menyisipkan saran micro-task (review catatan/flashcard). | Pending |
-| TC-10 | System | US-11 | Expo & NestJS | Pencatatan durasi aktual via Focus Timer | Jalankan timer belajar lalu tekan Selesai | Durasi aktual tersimpan otomatis sebagai data histori pengguna. | Pending |
-| TC-11 | Security | Semua | NestJS | Akses endpoint jadwal tanpa token login | Panggil GET /api/schedules tanpa header JWT | Request ditolak dengan status HTTP 401 Unauthorized. | Pending |
-| TC-12 | Acceptance (UAT) | Semua | End-to-End | Pengujian pemakaian nyata oleh 5 mahasiswa | 5 responden di luar tim menjalankan aplikasi | Rata-rata skor Usability & Usefulness >= 4.0 dari skala Likert 5.0. | Pending |
+## 1. Strategi 4 Level Pengujian (AoL SE LO3)
+1. **Unit Testing:** Menguji fungsi prediksi regresi ML, rumus skor prioritas, dan validasi input menggunakan `pytest` dan `Jest`.
+2. **Integration Testing:** Menguji komunikasi endpoint antara NestJS, PostgreSQL, dan FastAPI (termasuk syarat latensi < 100 ms).
+3. **System Testing:** Menguji alur end-to-end di aplikasi Expo mulai dari onboarding, input tugas, penjadwalan otomatis, hingga review sesi.
+4. **Acceptance Testing (UAT):** Pengujian langsung oleh minimal 5 mahasiswa di luar tim menggunakan kuesioner Likert (1-5) dan kualitatif.
+
+---
+
+## 2. Master Test Cases (Berdasarkan Acceptance Criteria US-1 s/d US-12)
+
+| Test ID | Level | US ID | Backlog No | Skenario Pengujian | Hasil yang Diharapkan (Acceptance Criteria) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| TC-01 | System | US-1 | 1, 2 | Register akun baru, login valid, & tes password salah | Akun baru masuk ke onboarding; login valid masuk ke halaman Hari Ini & sesi tersimpan; password salah ditolak dengan pesan error. |
+| TC-02 | Integration | US-2 | 5, 6 | Input tugas dengan kalimat bebas ("laporan DB 10 halaman deadline Jumat") | Judul, matkul, tipe, deadline, dan ukuran terisi otomatis; bagian yang gagal terbaca dibiarkan kosong untuk diisi manual. |
+| TC-03 | System | US-3 | 23, 24, 25 | Sinkronisasi Google Calendar & upload screenshot jadwal kuliah | Perubahan event Google Calendar muncul otomatis; screenshot menampilkan daftar kelas + input pemahaman awal (1-5); gambar rusak memunculkan opsi manual. |
+| TC-04 | System | US-4 | 3, 4 | Simpan preferensi jam tidur, jam produktif, batas harian, & agenda rutin | Preferensi tersimpan di profil dan tidak ada sesi belajar yang dijadwalkan menabrak jam tidur atau agenda rutin. |
+| TC-05 | Unit & Perf | US-5 | 7, 8, 9, 10 | Prediksi durasi tugas baru & uji latensi inferensi FastAPI (< 100 ms) | Menampilkan estimasi rentang jam beserta faktor utamanya dengan waktu respons endpoint ML < 100 ms. |
+| TC-06 | Integration | US-5 | 26 | Personalisasi estimasi durasi setelah >= 5 tugas selesai tercatat | Setelah 5 tugas memiliki durasi aktual, estimasi tugas ke-6 otomatis menyesuaikan kebiasaan kecepatan kerja pengguna. |
+| TC-07 | Integration | US-6 | 11, 12 | Urutan prioritas tugas di halaman Hari Ini beserta alasannya | Tugas terurut berdasarkan deadline, estimasi durasi, bobot, dan pemahaman matkul, dilengkapi teks alasan singkat. |
+| TC-08 | System | US-7 | 13, 14 | Penjadwalan otomatis ke waktu kosong & kondisi durasi melebihi slot | Tugas masuk ke waktu kosong sesuai prioritas; jika total durasi melebihi waktu kosong sebelum deadline, muncul peringatan & saran pecah tugas. |
+| TC-09 | System | US-8 | 15, 16 | Saran sesi belajar mandiri untuk matkul pemahaman terendah | Waktu kosong sisa diisi saran matkul dengan pemahaman awal terendah; tombol Terima menyimpan jadwal dan tombol Ganti memberi saran lain. |
+| TC-10 | System | US-9 | 20, 21, 22 | Tandai kelas batal & geser sesi belajar di timeline (drag-and-drop) | Kelas batal memunculkan saran kegiatan pengganti; pergeseran sesi di timeline tersimpan sebagai preferensi pengguna. |
+| TC-11 | System | US-10 | 17, 18 | Notifikasi pengingat 10 menit sebelum sesi dengan aksi Tunda / Lewati | Notifikasi tampil 10 menit sebelum sesi; tekan Tunda menggeser sesi 15 menit, tekan Lewati menandai sesi dilewati. |
+| TC-12 | Integration | US-11 | 18, 19, 27, 28 | Konfirmasi hasil sesi belajar (rating 1-5) & tes lewat 24 jam tanpa konfirmasi | Input Sebagian/Belum memindahkan sisa durasi ke slot kosong berikutnya; sesi tanpa konfirmasi > 24 jam otomatis dianggap belum selesai. |
+| TC-13 | System | US-12 | 29, 30, 31 | Evaluasi ringkasan mingguan & deteksi penurunan pemahaman matkul | Menampilkan tugas selesai vs rencana, jam belajar, akurasi estimasi, dan memberi tanda khusus pada matkul yang pemahamannya turun. |
